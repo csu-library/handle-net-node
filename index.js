@@ -26,9 +26,9 @@ const apiConfig = {
   })
 };
 
-const handleAPI = Axios.create(apiConfig);
-
 async function auth() {
+  const handleAPI = Axios.create(apiConfig);
+
   const key = fs.readFileSync(config.privateKeyPath);
   
   let resUnauth = await handleAPI.post('/sessions/');
@@ -112,84 +112,7 @@ async function deleteHandle(sessionId, handle) {
   return del(sessionId, `/handles/${handle}`);
 }
 
-(async () => {
-  let sessionId = await auth();
-  console.log(`Session ID: ${sessionId}`);
-  
-  let nowISO = (new Date()).toISOString();
-  console.log(`Current Date/Time: ${nowISO}`);
 
-  console.log('Testing get all handles...');
-  let getHandlesRes = await getHandles(sessionId, '10217');
-  console.log(getHandlesRes.data);
-
-  console.log('Testing get handle...');
-  let getHandleRes = await getHandle(sessionId, '10217/marcus');
-  console.log(getHandleRes.data);
-
-  console.log('Testing delete handle...');
-  let deleteHandleRes = await deleteHandle(sessionId, '10217/marcus');
-  console.log(deleteHandleRes.data);
-
-  console.log('Testing create handle...');
-  let createHandleRes = await createHandle(sessionId, '10217/marcus', {
-    handle: '10217/marcus',
-    values: [
-      {
-        index: 1,
-        type: 'URL',
-        ttl: 86400,
-        timestamp: nowISO,
-        data: {
-          value: 'https://longwell.tech',
-          format: 'string'
-        }
-      },
-      {
-        index: 2,
-        ttl: 86400,
-        type: 'EMAIL',
-        timestamp: nowISO,
-        data: {
-          value: 'marcus.longwell@colostate.edu',
-          format: 'string'
-        }
-      },
-      {
-        index: 100,
-        ttl: 86400,
-        type: 'HS_ADMIN',
-        timestamp: nowISO,
-        data: {
-          format: 'admin',
-          value: {
-            index: 200,
-            handle: config.authId,
-            permissions: '111111111111'
-          }
-        }
-      }
-    ]
-  });
-  console.log(createHandleRes.data);
-
-  console.log('Testing update handle...');
-  let updateHandleRes = await updateHandle(sessionId, '10217/marcus', {
-    values: [
-      {
-        index: 2, 
-        ttl: 86400,
-        type: 'EMAIL',
-        timestamp: nowISO,
-        data: {
-          value: 'marcuslongwell@gmail.com',
-          format: 'string'
-        }
-      }
-    ]
-  });
-  console.log(updateHandleRes.data);
-})();
 
 export {
   auth,
