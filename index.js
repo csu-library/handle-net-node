@@ -7,9 +7,11 @@ import fs from 'fs';
 Dotenv.config(0);
 
 const config = {
-  hashAlg: process.env.HASH_ALGORITHM || 'sha1',
-  authId: process.env.AUTH_ID || '300:0.NA/12345',
-  privateKeyPath: process.env.PRIVATE_KEY_PATH || '/admpriv.key',
+  auth: {
+    hashAlgorithm: process.env.HANDLE_HASH_ALGORITHM || 'sha1',
+    authId: process.env.HANDLE_AUTH_ID || '300:0.NA/12345',
+    privateKeyPath: process.env.HANDLE_AUTH_PRIVATE_KEY_PATH || '/admpriv.key',
+  },
   server: {
     host: process.env.HANDLE_SERVER_HOST || 'localhost',
     port: process.env.HANDLE_SERVER_PORT || '8000',
@@ -29,7 +31,9 @@ const apiConfig = {
 async function auth() {
   const handleAPI = Axios.create(apiConfig);
 
-  const key = fs.readFileSync(config.privateKeyPath);
+  console.log(config);
+  const key = fs.readFileSync(config.auth.privateKeyPath);
+  
   
   let resUnauth = await handleAPI.post('/sessions/');
 
@@ -43,10 +47,10 @@ async function auth() {
   let combinedBuff = Buffer.concat([serverBuff, clientBuff]);
   let combinedNonce = combinedBuff.toString('base64');
 
-  let signatureBuff = Crypto.sign(config.hashAlg, combinedBuff, key);
+  let signatureBuff = Crypto.sign(config.auth.hashAlgorithm, combinedBuff, key);
   let signatureNonce = signatureBuff.toString('base64');
 
-  let authString = `Handle version="0", sessionId="${sessionId}", cnonce="${clientNonce}", id="${config.authId}", type="HS_PUBKEY", alg="${config.hashAlg}", signature="${signatureNonce}"`;
+  let authString = `Handle version="0", sessionId="${sessionId}", cnonce="${clientNonce}", id="${config.auth.authId}", type="HS_PUBKEY", alg="${config.auth.hashAlgorithm}", signature="${signatureNonce}"`;
   
   // console.log(`SESSION ID: ${sessionId}`);
   // console.log(`SERVER NONCE: ${serverNonce}`);
