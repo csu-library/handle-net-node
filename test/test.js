@@ -1,34 +1,35 @@
 import assert from 'assert';
-import { auth, getHandles, getHandle, createHandle, updateHandle, deleteHandle } from '../index.js';
+import HandleNet from '../index.js';
 
-let sessionId = '';
+let handleNet = new HandleNet();
 let nowISO = (new Date()).toISOString();
 
 describe('Auth', () => {
   it('can authenticate', async () => {
-    sessionId = await auth();
-    assert.notEqual(sessionId, '');
+    // await auth();
+    await handleNet.auth();
+    assert.notEqual(handleNet.sessionId, '');
   });
 });
 
 describe('API', () => {
   it('can get all handles', async () => {
-    let getHandlesRes = await getHandles(sessionId, '10217');
+    let getHandlesRes = await handleNet.getHandles('10217');
     assert.strictEqual(getHandlesRes.data.responseCode, 1);
   });
 
   it('can get single handle', async () => {
-    let getHandleRes = await getHandle(sessionId, '10217/marcus');
+    let getHandleRes = await handleNet.getHandle('10217/marcus');
     assert.strictEqual(getHandleRes.data.responseCode, 1);
   });
 
   it('can delete handle', async () => {
-    let deleteHandleRes = await deleteHandle(sessionId, '10217/marcus');
+    let deleteHandleRes = await handleNet.deleteHandle('10217/marcus');
     assert.strictEqual(deleteHandleRes.data.responseCode, 1);
   });
 
   it('can create new handle', async () => {
-    let createHandleRes = await createHandle(sessionId, '10217/marcus', {
+    let createHandleRes = await handleNet.createHandle('10217/marcus', {
       handle: '10217/marcus',
       values: [
         {
@@ -60,7 +61,7 @@ describe('API', () => {
             format: 'admin',
             value: {
               index: 200,
-              handle: config.authId,
+              handle: handleNet.authId,
               permissions: '111111111111'
             }
           }
@@ -71,7 +72,7 @@ describe('API', () => {
   });
 
   it('can update existing handle', async () => {
-    let updateHandleRes = await updateHandle(sessionId, '10217/marcus', {
+    let updateHandleRes = await handleNet.updateHandle('10217/marcus', {
       values: [
         {
           index: 2, 

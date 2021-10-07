@@ -6,123 +6,121 @@ import fs from 'fs';
 
 Dotenv.config(0);
 
-const config = {
-  auth: {
-    hashAlgorithm: process.env.HANDLE_HASH_ALGORITHM || 'sha1',
-    authId: process.env.HANDLE_AUTH_ID || '300:0.NA/12345',
-    privateKeyPath: process.env.HANDLE_AUTH_PRIVATE_KEY_PATH || '/admpriv.key',
-  },
-  server: {
-    host: process.env.HANDLE_SERVER_HOST || 'localhost',
-    port: process.env.HANDLE_SERVER_PORT || '8000',
-    path: process.env.HANDLE_SERVER_PATH || '/api',
-    alg: process.env.HANDLE_SERVER_ALGORITHM || 'sha1',
-    selfSigned: process.env.HANDLE_SERVER_SELF_SIGNED.toLowerCase() == 'yes'
+class HandleNet {
+  hashAlgorithm = process.env.HANDLE_HASH_ALGORITHM || 'sha1';
+  authId = process.env.HANDLE_AUTH_ID || '300:0.NA/12345';
+  privateKeyPath = process.env.HANDLE_AUTH_PRIVATE_KEY_PATH || '/admpriv.key';
+
+  serverHost = process.env.HANDLE_SERVER_HOST || 'localhost';
+  serverPort = process.env.HANDLE_SERVER_PORT || '8000';
+  serverPath = process.env.HANDLE_SERVER_PATH || '/api';
+  serverSelfSigned = process.env.HANDLE_SERVER_SELF_SIGNED.toLowerCase() == 'yes';
+
+  sessionId = '';
+
+  constructor() {
+
   }
-};
 
-const apiConfig = {
-  baseURL: `https://${config.server.host}:${config.server.port}${config.server.path}`,
-  httpsAgent: new https.Agent({
-    rejectUnauthorized: !config.server.selfSigned
-  })
-};
+  apiConfig() {
+    return {
+      baseURL: `https://${this.serverHost}:${this.serverPort}${this.serverPath}`,
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: !this.serverSelfSigned
+      })
+    };
+  }
 
-async function auth() {
-  const handleAPI = Axios.create(apiConfig);
-
-  console.log(config);
-  const key = fs.readFileSync(config.auth.privateKeyPath);
+  async auth() {
+    const handleAPI = Axios.create(this.apiConfig());
   
+    const key = fs.readFileSync(this.privateKeyPath);
+    
+    let resUnauth = await handleAPI.post('/sessions/');
   
-  let resUnauth = await handleAPI.post('/sessions/');
-
-  let sessionId = resUnauth.data.sessionId;
-  let serverNonce = resUnauth.data.nonce;
-  let serverBuff = Buffer.from(serverNonce, 'base64');
+    let sessionId = resUnauth.data.sessionId;
+    let serverNonce = resUnauth.data.nonce;
+    let serverBuff = Buffer.from(serverNonce, 'base64');
+    
+    let clientBuff = await Crypto.randomBytes(16);
+    let clientNonce = clientBuff.toString('base64');
   
-  let clientBuff = await Crypto.randomBytes(16);
-  let clientNonce = clientBuff.toString('base64');
-
-  let combinedBuff = Buffer.concat([serverBuff, clientBuff]);
-  let combinedNonce = combinedBuff.toString('base64');
-
-  let signatureBuff = Crypto.sign(config.auth.hashAlgorithm, combinedBuff, key);
-  let signatureNonce = signatureBuff.toString('base64');
-
-  let authString = `Handle version="0", sessionId="${sessionId}", cnonce="${clientNonce}", id="${config.auth.authId}", type="HS_PUBKEY", alg="${config.auth.hashAlgorithm}", signature="${signatureNonce}"`;
+    let combinedBuff = Buffer.concat([serverBuff, clientBuff]);
+    // let combinedNonce = combinedBuff.toString('base64');
   
-  // console.log(`SESSION ID: ${sessionId}`);
-  // console.log(`SERVER NONCE: ${serverNonce}`);
-  // console.log(`CLIENT NONCE: ${clientNonce}`);
-  // console.log(`COMBINED NONCE: ${combinedNonce}`);
-  // console.log(`SIGNATURE NONCE: ${signatureNonce}`);
-  // console.log(`AUTH STRING: ${authString}`);
+    let signatureBuff = Crypto.sign(this.hashAlgorithm, combinedBuff, key);
+    let signatureNonce = signatureBuff.toString('base64');
+  
+    let authString = `Handle version="0", sessionId="${sessionId}", cnonce="${clientNonce}", id="${this.authId}", type="HS_PUBKEY", alg="${this.hashAlgorithm}", signature="${signatureNonce}"`;
+    
+    // console.log(`SESSION ID: ${sessionId}`);
+    // console.log(`SERVER NONCE: ${serverNonce}`);
+    // console.log(`CLIENT NONCE: ${clientNonce}`);
+    // console.log(`COMBINED NONCE: ${combinedNonce}`);
+    // console.log(`SIGNATURE NONCE: ${signatureNonce}`);
+    // console.log(`AUTH STRING: ${authString}`);
+  
+    let resAuth = await handleAPI.post('/sessions/this', null, {
+      headers: {
+        'Authorization': authString
+      }
+    });
 
-  let resAuth = await handleAPI.post('/sessions/this', null, {
-    headers: {
-      'Authorization': authString
+    this.sessionId = sessionId;
+  
+    if (!resAuth.data.authenticated) {
+      throw new Error('Handle server responded, but did not authenticate');
     }
-  });
+  }
 
-  if (resAuth.data.authenticated) return sessionId;
-  throw new Error('Handle server responded, but did not authenticate');
+  async req(method, path, body) {
+    if (this.sessionId.length < 1) throw new Error('Not logged in');
+
+    let reqConfig = Object.assign({}, this.apiConfig(), {
+      method: method,
+      url: path,
+      data: body,
+      headers: {
+        'Authorization': `Handle version="0", sessionId="${this.sessionId}"`
+      }
+    });
+  
+    let api = Axios.create(reqConfig);
+  
+    return api.request(reqConfig);
+  }
+
+  async get(path) {
+    return this.req('get', path, null);
+  }
+  
+  async put(path, body) {
+    return this.req('put', path, body);
+  }
+  
+  async del(path, body) {
+    return this.req('delete', path, body);
+  }
+
+  async getHandles(prefix) {
+    return this.get(`/handles?prefix=${prefix}`);
+  }
+  
+  async getHandle(handle) {
+    return this.get(`/handles/${handle}`);
+  }
+  
+  async createHandle(handle, data) {
+    return this.put(`/handles/${handle}?overwrite=false`, data);
+  }
+  
+  async updateHandle(handle, data) {
+    return this.put(`/handles/${handle}?overwrite=true`, data);
+  }
+  
+  async deleteHandle(handle) {
+    return this.del(`/handles/${handle}`);
+  }
 }
 
-async function req(sessionId, method, path, body) {
-  let reqConfig = Object.assign({}, apiConfig, {
-    method: method,
-    url: path,
-    data: body,
-    headers: {
-      'Authorization': `Handle version="0", sessionId="${sessionId}"`
-    }
-  });
-
-  let api = Axios.create(reqConfig);
-
-  return api.request(reqConfig);
-}
-
-async function get(sessionId, path) {
-  return req(sessionId, 'get', path, null);
-}
-
-async function put(sessionId, path, body) {
-  return req(sessionId, 'put', path, body);
-}
-
-async function del(sessionId, path, body) {
-  return req(sessionId, 'delete', path, body);
-}
-
-async function getHandles(sessionId, prefix) {
-  return get(sessionId, `/handles?prefix=${prefix}`);
-}
-
-async function getHandle(sessionId, handle) {
-  return get(sessionId, `/handles/${handle}`);
-}
-
-async function createHandle(sessionId, handle, data) {
-  return put(sessionId, `/handles/${handle}?overwrite=false`, data);
-}
-
-async function updateHandle(sessionId, handle, data) {
-  return put(sessionId, `/handles/${handle}?overwrite=true`, data);
-}
-
-async function deleteHandle(sessionId, handle) {
-  return del(sessionId, `/handles/${handle}`);
-}
-
-
-
-export {
-  auth,
-  getHandles,
-  getHandle,
-  createHandle,
-  updateHandle,
-  deleteHandle
-}
+export default HandleNet;
