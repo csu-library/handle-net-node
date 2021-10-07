@@ -48,12 +48,12 @@ async function auth() {
 
   let authString = `Handle version="0", sessionId="${sessionId}", cnonce="${clientNonce}", id="${config.authId}", type="HS_PUBKEY", alg="${config.hashAlg}", signature="${signatureNonce}"`;
   
-  console.log(`SESSION ID: ${sessionId}`);
-  console.log(`SERVER NONCE: ${serverNonce}`);
-  console.log(`CLIENT NONCE: ${clientNonce}`);
-  console.log(`COMBINED NONCE: ${combinedNonce}`);
-  console.log(`SIGNATURE NONCE: ${signatureNonce}`);
-  console.log(`AUTH STRING: ${authString}`);
+  // console.log(`SESSION ID: ${sessionId}`);
+  // console.log(`SERVER NONCE: ${serverNonce}`);
+  // console.log(`CLIENT NONCE: ${clientNonce}`);
+  // console.log(`COMBINED NONCE: ${combinedNonce}`);
+  // console.log(`SIGNATURE NONCE: ${signatureNonce}`);
+  // console.log(`AUTH STRING: ${authString}`);
 
   let resAuth = await handleAPI.post('/sessions/this', null, {
     headers: {
