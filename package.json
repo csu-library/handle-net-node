@@ -1,0 +1,27 @@
+{
+  "name": "handle-net",
+  "version": "1.0.0",
+  "description": "handle.net api sdk for nodejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/csu-library/handle-net-node.git"
+  },
+  "keywords": [
+    "handle",
+    "hdl",
+    "handle.net",
+    "node",
+    "sdk",
+    "api"
+  ],
+  "author": "Marcus Longwell",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/csu-library/handle-net-node/issues"
+  },
+  "homepage": "https://github.com/csu-library/handle-net-node#readme"
+}
