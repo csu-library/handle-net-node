@@ -16,6 +16,8 @@ class HandleNet {
   serverPath = process.env.HANDLE_SERVER_PATH || '/api';
   serverSelfSigned = process.env.HANDLE_SERVER_SELF_SIGNED.toLowerCase() == 'yes';
 
+  testHandle = process.env.HANDLE_TEST_HANDLE || '12345/test';
+
   sessionId = '';
 
   constructor() {

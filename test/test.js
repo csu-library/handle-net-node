@@ -13,24 +13,9 @@ describe('Auth', () => {
 });
 
 describe('API', () => {
-  it('can get all handles', async () => {
-    let getHandlesRes = await handleNet.getHandles('10217');
-    assert.strictEqual(getHandlesRes.data.responseCode, 1);
-  });
-
-  it('can get single handle', async () => {
-    let getHandleRes = await handleNet.getHandle('10217/marcus');
-    assert.strictEqual(getHandleRes.data.responseCode, 1);
-  });
-
-  it('can delete handle', async () => {
-    let deleteHandleRes = await handleNet.deleteHandle('10217/marcus');
-    assert.strictEqual(deleteHandleRes.data.responseCode, 1);
-  });
-
   it('can create new handle', async () => {
-    let createHandleRes = await handleNet.createHandle('10217/marcus', {
-      handle: '10217/marcus',
+    let createHandleRes = await handleNet.createHandle(handleNet.testHandle, {
+      handle: handleNet.testHandle,
       values: [
         {
           index: 1,
@@ -38,7 +23,7 @@ describe('API', () => {
           ttl: 86400,
           timestamp: nowISO,
           data: {
-            value: 'https://longwell.tech',
+            value: 'https://example.com',
             format: 'string'
           }
         },
@@ -48,7 +33,7 @@ describe('API', () => {
           type: 'EMAIL',
           timestamp: nowISO,
           data: {
-            value: 'marcus.longwell@colostate.edu',
+            value: 'email@example.com',
             format: 'string'
           }
         },
@@ -71,8 +56,18 @@ describe('API', () => {
     assert.strictEqual(createHandleRes.data.responseCode, 1);
   });
 
+  it('can get all handles', async () => {
+    let getHandlesRes = await handleNet.getHandles(handleNet.testHandle.split('/')[0]);
+    assert.strictEqual(getHandlesRes.data.responseCode, 1);
+  });
+
+  it('can get single handle', async () => {
+    let getHandleRes = await handleNet.getHandle(handleNet.testHandle);
+    assert.strictEqual(getHandleRes.data.responseCode, 1);
+  });
+
   it('can update existing handle', async () => {
-    let updateHandleRes = await handleNet.updateHandle('10217/marcus', {
+    let updateHandleRes = await handleNet.updateHandle(handleNet.testHandle, {
       values: [
         {
           index: 2, 
@@ -80,12 +75,17 @@ describe('API', () => {
           type: 'EMAIL',
           timestamp: nowISO,
           data: {
-            value: 'marcuslongwell@gmail.com',
+            value: 'email2@example.com',
             format: 'string'
           }
         }
       ]
     });
     assert.strictEqual(updateHandleRes.data.responseCode, 1);
+  });
+
+  it('can delete handle', async () => {
+    let deleteHandleRes = await handleNet.deleteHandle(handleNet.testHandle);
+    assert.strictEqual(deleteHandleRes.data.responseCode, 1);
   });
 });
