@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,5 +25,9 @@
   "bugs": {
     "url": "https://github.com/csu-library/handle-net-node/issues"
   },
-  "homepage": "https://github.com/csu-library/handle-net-node#readme"
+  "homepage": "https://github.com/csu-library/handle-net-node#readme",
+  "dependencies": {
+    "axios": "^0.22.0",
+    "dotenv": "^10.0.0"
+  }
 }
