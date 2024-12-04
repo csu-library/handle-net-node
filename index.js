@@ -7,12 +7,12 @@ class HandleNet {
 
   constructor(config = {}) {
     this.hashAlgorithm = config.hashAlgorithm || "sha1";
-    this.authId = config.authID || "300:0.NA/12345";
+    this.authId = config.authId || "300:0.NA/12345";
     this.privateKeyPath = config.authPrivateKeyPath || "/admpriv.key";
     this.serverHost = config.serverHost || "localhost";
     this.serverPort = config.serverPort || "8000";
     this.serverPath = config.serverPath || "/api";
-    this.serverSelfSigned = config.serverSelfSigned.toLowerCase() == 'yes';
+    this.serverSelfSigned = config.serverSelfSigned;
     this.testHandle = config.testHandle || "12345/test";
     this.sessionId = "";
   }

@@ -1,7 +1,8 @@
 import assert from 'assert';
 import HandleNet from '../index.js';
+import config from '../config.js';
 
-let handleNet = new HandleNet();
+let handleNet = new HandleNet(config);
 let nowISO = (new Date()).toISOString();
 
 describe('Auth', () => {
@@ -70,7 +71,7 @@ describe('API', () => {
     let updateHandleRes = await handleNet.updateHandle(handleNet.testHandle, {
       values: [
         {
-          index: 2, 
+          index: 2,
           ttl: 86400,
           type: 'EMAIL',
           timestamp: nowISO,
